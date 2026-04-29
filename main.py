@@ -46,27 +46,30 @@ def update_student():
     """修改学生及成绩信息"""
     pass
 
-def query_student(query_by):
+def query_student(purpose = "print"):
     """按条件查询学生"""
-    if query_by == "id":
-        student_id = input("请输入学号: ")
-        for student in student_database:
-            if student["id"] == student_id:
-                print(student)  # TODO: 需要格式化输出
-                return student_database.index(student)
-        print("未找到该学生！")
+    match purpose:
+        case "print": keyword = input("请输入要查询的姓名/学号: ").strip()
+        case "delete": keyword = input("请输入要删除的学生姓名/学号: ").strip()
+        case "update": keyword = input("请输入要修改的学生姓名/学号: ").strip()
+        case _: keyword = ""
+    if keyword == "":
+        print("输入不能为空！")
         return 1
-    elif query_by == "name":
-        name = input("请输入姓名: ")
+    elif keyword.isdigit():
         for student in student_database:
-            if student["name"] == name:
+            if student["id"] == keyword:
                 print(student)  # TODO: 需要格式化输出
                 return student_database.index(student)
         print("未找到该学生！")
         return 1
     else:
-        print("内部错误：查询方式有误！")
-        return -1
+        for student in student_database:
+            if student["name"] == keyword:
+                print(student)  # TODO: 需要格式化输出
+                return student_database.index(student)
+        print("未找到该学生！")
+        return 1
 
 def list_all_students():
     """显示所有学生列表"""
