@@ -15,10 +15,10 @@ def add_student():
         print("学号已存在！")
         return 1
     else:
-        name = input("学生姓名: ")
-        chinese = float(input("语文成绩: "))
-        math = float(input("数学成绩: "))
-        english = float(input("英语成绩: "))
+        name = input("学生姓名: ").strip()
+        chinese = float(input("语文成绩: ").strip())
+        math = float(input("数学成绩: ").strip())
+        english = float(input("英语成绩: ").strip())
         total = chinese + math + english
         average = total / 3
 
@@ -40,7 +40,15 @@ def add_student():
 
 def delete_student():
     """删除学生及成绩信息"""
-    pass
+    query_result = query_student("delete")
+    if query_result != 1:
+        student_database.remove(query_result)
+        with open("database.json", "w", encoding="utf-8") as f:
+            json.dump(student_database, f)
+        print("学生信息删除成功！")
+        return 0
+    else:
+        return 1
 
 def update_student():
     """修改学生及成绩信息"""
@@ -60,14 +68,14 @@ def query_student(purpose = "print"):
         for student in student_database:
             if student["id"] == keyword:
                 print(student)  # TODO: 需要格式化输出
-                return student_database.index(student)
+                return student
         print("未找到该学生！")
         return 1
     else:
         for student in student_database:
             if student["name"] == keyword:
                 print(student)  # TODO: 需要格式化输出
-                return student_database.index(student)
+                return student
         print("未找到该学生！")
         return 1
 
