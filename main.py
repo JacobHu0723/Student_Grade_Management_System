@@ -1,4 +1,5 @@
 import json
+import math
 import os
 
 if not os.path.exists("database.json"):
@@ -88,25 +89,78 @@ def query_student(purpose = "print"):
     elif keyword.isdigit():
         for student in student_database:
             if student["id"] == keyword:
-                if purpose == "print": print(student)  # TODO: 需要格式化输出
+                if purpose == "print":
+                    print(f"""\
+{'学号':<10}{'姓名':<8}{'语文':<6}{'数学':<6}{'英语':<6}{'总分':<6}{'平均分':<8}
+{student['id']:<10}{student['name']:<8}{student['chinese']:<6}{student['math']:<6}{student['english']:<6}{student['total']:<6}{student['average']:<8.3f}
+""")
                 return student
         print("未找到该学生！")
         return 1
     else:
         for student in student_database:
             if student["name"] == keyword:
-                if purpose == "print": print(student)  # TODO: 需要格式化输出
+                if purpose == "print":
+                    print(f"""\
+{'学号':<10}{'姓名':<8}{'语文':<6}{'数学':<6}{'英语':<6}{'总分':<6}{'平均分':<8}
+{student['id']:<10}{student['name']:<8}{student['chinese']:<6}{student['math']:<6}{student['english']:<6}{student['total']:<6}{student['average']:<8.3f}
+""")
                 return student
         print("未找到该学生！")
         return 1
 
 def list_all_students():
     """显示所有学生列表"""
-    pass
+    if len(student_database) == 0:
+        print("暂无学生信息！")
+        return 1
+    current_page = 1
+    total_page = math.ceil(len(student_database) / 10)
+    while True:
+        print(f"{'学号':<10}{'姓名':<8}{'语文':<6}{'数学':<6}{'英语':<6}{'总分':<6}{'平均分':<8}")
+        for student in student_database[current_page * 10 - 9:min(current_page * 10, len(student_database))]:
+            print(f"{student['id']:<10}{student['name']:<8}"
+                  f"{student['chinese']:<6}{student['math']:<6}{student['english']:<6}"
+                  f"{student['total']:<6}{student['average']:<8.3f}")
+        print(f"**当前第 {current_page} 页，共 {total_page} 页**")
+        choice = input("按回车键查看下一页，输入数字跳转到指定页码，输入 q 退出查看...").strip()
+        if choice == "q":
+            break
+        elif choice.isdigit():
+            current_page = int(choice)
+        else:
+            current_page += 1
+        if current_page > total_page:
+            print("超出最大页数！")
+            break
+    return 0
 
 def score_statistics():
     """成绩统计分析（平均分、最高分、及格率等）"""
-    pass
+    if len(student_database) == 0:
+        print("暂无学生信息！")
+        return 1
+    total_chinese = sum(student["chinese"] for student in student_database)
+    total_math = sum(student["math"] for student in student_database)
+    total_english = sum(student["english"] for student in student_database)
+    average_chinese = total_chinese / len(student_database)
+    average_math = total_math / len(student_database)
+    average_english = total_english / len(student_database)
+    highest_chinese = max(student["chinese"] for student in student_database)
+    highest_math = max(student["math"] for student in student_database)
+    highest_english = max(student["english"] for student in student_database)
+    pass_rate_chinese = sum(1 for student in student_database if student["chinese"] >= 60) / len(student_database) * 100
+    pass_rate_math = sum(1 for student in student_database if student["math"] >= 60) / len(student_database) * 100
+    pass_rate_english = sum(1 for student in student_database if student["english"] >= 60) / len(student_database) * 100
+
+    print(f"""\
+成绩统计分析:
+科目    平均分    最高分    及格率
+语文    {average_chinese:.2f}    {highest_chinese}    {pass_rate_chinese:.2f}%
+数学    {average_math:.2f}    {highest_math}    {pass_rate_math:.2f}%
+英语    {average_english:.2f}    {highest_english}    {pass_rate_english:.2f}%\
+""")
+    return 0
 
 
 if __name__ == "__main__":
