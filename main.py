@@ -8,9 +8,10 @@ if not os.path.exists("database.json"):
 with open("database.json", "r", encoding="utf-8") as f:
     student_database = json.load(f)
 
-def add_student():
+def add_student(student_id = ""):
     """添加学生及成绩信息"""
-    student_id = input("请输入学号: ")
+    if student_id == "":
+        student_id = input("请输入学号: ").strip()
     if any(student_id == s["id"] for s in student_database):
         print("学号已存在！")
         return 1
@@ -35,7 +36,10 @@ def add_student():
 
     with open("database.json", "w", encoding="utf-8") as a:
         json.dump(student_database, a)
-    print("学生信息添加成功！")
+    if student_id == "":
+        print("学生信息添加成功！")
+    else:
+        print("学生信息修改成功！")
     return 0
 
 def delete_student():
@@ -43,8 +47,8 @@ def delete_student():
     query_result = query_student("delete")
     if query_result != 1:
         student_database.remove(query_result)
-        with open("database.json", "w", encoding="utf-8") as f:
-            json.dump(student_database, f)
+        with open("database.json", "w", encoding="utf-8") as d:
+            json.dump(student_database, d)
         print("学生信息删除成功！")
         return 0
     else:
@@ -52,7 +56,24 @@ def delete_student():
 
 def update_student():
     """修改学生及成绩信息"""
-    pass
+    query_result = query_student("update")
+    if query_result != 1:
+        student_database.remove(query_result)
+        with open("database.json", "w", encoding="utf-8") as u:
+            json.dump(student_database, u)
+        print(f"""\
+原学生信息:
+学号: {query_result["id"]}
+学生姓名: {query_result["name"]}
+语文成绩: {query_result["chinese"]}
+数学成绩: {query_result["math"]}
+英语成绩: {query_result["english"]}
+新学生信息: \
+""")
+        add_student(query_result["id"])
+        return 0
+    else:
+        return 1
 
 def query_student(purpose = "print"):
     """按条件查询学生"""
@@ -67,14 +88,14 @@ def query_student(purpose = "print"):
     elif keyword.isdigit():
         for student in student_database:
             if student["id"] == keyword:
-                print(student)  # TODO: 需要格式化输出
+                if purpose == "print": print(student)  # TODO: 需要格式化输出
                 return student
         print("未找到该学生！")
         return 1
     else:
         for student in student_database:
             if student["name"] == keyword:
-                print(student)  # TODO: 需要格式化输出
+                if purpose == "print": print(student)  # TODO: 需要格式化输出
                 return student
         print("未找到该学生！")
         return 1
@@ -104,7 +125,7 @@ if __name__ == "__main__":
 6. 成绩统计
 0. 退出系统
 请输入功能对应的数字: \
-""")
+""").strip()
         match selection:
             case "1":
                 add_student()
