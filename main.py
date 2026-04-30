@@ -163,6 +163,48 @@ def score_statistics():
     return 0
 
 
+def sort_students():
+    """成绩排序（按总分或单科成绩升序/降序）"""
+    if len(student_database) == 0:
+        print("暂无学生信息！")
+        return 1
+
+    # 选择排序字段
+    field_choice = input("""请选择排序依据:
+1. 总分
+2. 语文成绩
+3. 数学成绩
+4. 英语成绩
+请输入数字: """).strip()
+
+    field_map = {"1": "total", "2": "chinese", "3": "math", "4": "english"}
+    field_name_map = {"total": "总分", "chinese": "语文", "math": "math", "english": "英语"}
+
+    if field_choice not in field_map:
+        print("输入有误！")
+        return 1
+
+    sort_field = field_map[field_choice]
+
+    # 选择排序方式
+    order_choice = input("请选择排序方式 (1. 升序  2. 降序): ").strip()
+    reverse = (order_choice == "2")
+
+    # 排序（不修改原数据）
+    sorted_list = sorted(student_database, key=lambda s: s[sort_field], reverse=reverse)
+
+    order_text = "降序" if reverse else "升序"
+    print(f"\n--- 按 {field_name_map[sort_field]} {order_text} 排序结果 ---")
+    print(f"{'排名':<6}{'学号':<10}{'姓名':<8}{'语文':<6}{'数学':<6}{'英语':<6}{'总分':<6}{'平均分':<8}")
+
+    for rank, student in enumerate(sorted_list, 1):
+        print(f"{rank:<6}{student['id']:<10}{student['name']:<8}"
+              f"{student['chinese']:<6}{student['math']:<6}{student['english']:<6}"
+              f"{student['total']:<6}{student['average']:<8.3f}")
+
+    return 0
+
+
 if __name__ == "__main__":
     print("""\
 ******************************************************
@@ -177,6 +219,7 @@ if __name__ == "__main__":
 4. 查询学生信息
 5. 显示所有学生
 6. 成绩统计
+7. 成绩排序
 0. 退出系统
 请输入功能对应的数字: \
 """).strip()
@@ -193,6 +236,8 @@ if __name__ == "__main__":
                 list_all_students()
             case "6":
                 score_statistics()
+            case "7":
+                sort_students()
             case "0":
                 print("退出成功！")
                 break
