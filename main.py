@@ -1,6 +1,7 @@
 import json
 import math
 import os
+import csv
 
 if not os.path.exists("database.json"):
     with open("database.json", "w", encoding="utf-8") as f:
@@ -205,6 +206,138 @@ def sort_students():
     return 0
 
 
+def batch_import():
+    """从CSV文件批量导入学生信息"""
+    file_path = input("请输入CSV文件路径（格式: 学号,姓名,语文,数学,英语）: ").strip()
+
+    if not os.path.exists(file_path):
+        print(f"文件不存在: {file_path}")
+        return 1
+
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            # 检测是否有表头（第一行非数字则视为表头跳过）
+            first_line = f.readline().strip()
+            if not first_line:
+                print("文件为空！")
+                return 1
+
+            parts = first_line.split(",")
+            # 如果第一行第一列不是纯数字，视为表头
+            has_header = not parts[0].strip().isdigit()
+            f.seek(0)
+            reader = csv.reader(f)
+
+            if has_header:
+                header = next(reader)  # 跳过表头
+                print(f"检测到表头: {header}")
+
+            success_count = 0
+            skip_count = 0
+
+            for row in reader:
+                if len(row) < 5 or not row[0].strip():
+                    continue  # 跳过不合法行
+
+                student_id = row[0].strip()
+
+                # 跳过已存在的学号
+                if any(student_id == s["id"] for s in student_database):
+                    skip_count += 1
+                    continue
+
+                name = row[1].strip()
+                chinese = float(row[2].strip())
+                math_score = float(row[3].strip())
+                english = float(row[4].strip())
+                total = chinese + math_score + english
+                average = total / 3
+
+                student_info = {
+                    "id": student_id,
+                    "name": name,
+                    "chinese": chinese,
+                    "math": math_score,
+                    "english": english,
+                    "total": total,
+                    "average": average
+                }
+                student_database.append(student_info)
+                success_count += 1
+
+            if success_count > 0:
+                with open("database.json", "w", encoding="utf-8") as db_file:
+                    json.dump(student_database, db_file, ensure_ascii=False)
+
+            print(f"\n批量导入完成！")
+            print(f"  成功导入: {success_count} 条")
+            print(f"  跳过重复学号: {skip_count} 条")
+
+    except Exception as e:
+        print(f"导入失败，错误信息: {e}")
+        return 1
+
+    return 0
+
+
+def get_grade_level(average):
+    """根据平均分判定等级"""
+    if average >= 90:
+        return "优秀"
+    elif average >= 80:
+        return "良好"
+    elif average >= 60:
+        return "及格"
+    else:
+        return "不及格"
+
+
+def grade_level_report():
+    """成绩等级判定报告（优秀/良好/及格/不及格）"""
+    if len(student_database) == 0:
+        print("暂无学生信息！")
+        return 1
+
+    grade_counts = {"优秀": 0, "良好": 0, "及格": 0, "不及格": 0}
+    grade_details = {"优秀": [], "良好": [], "及格": [], "不及格": []}
+
+    for student in student_database:
+        level = get_grade_level(student["average"])
+        grade_counts[level] += 1
+        grade_details[level].append(student)
+
+    total = len(student_database)
+
+    # 输出统计摘要
+    print(f"\n{'='*55}")
+    print(f"           成绩等级评定报告")
+    print(f"{'='*55}")
+    print(f"\n等级      人数      占比      标准")
+    print(f"{'-'*50}")
+    print(f"优秀     {grade_counts['优秀']:<8} {(grade_counts['优秀']/total*100):>5.1f}%     平均分 >= 90")
+    print(f"良好     {grade_counts['良好']:<8} {(grade_counts['良好']/total*100):>5.1f}%     平均分 80~89")
+    print(f"及格     {grade_counts['及格']:<8} {(grade_counts['及格']/total*100):>5.1f}%     平均分 60~79")
+    print(f"不及格   {grade_counts['不及格']:<8} {(grade_counts['不及格']/total*100):>5.1f}%     平均分 < 60")
+    print(f"{'-'*50}")
+    print(f"合计     {total:<8} 100.0%")
+
+    # 输出各等级详细名单
+    for level in ["优秀", "良好", "及格", "不及格"]:
+        students = grade_details[level]
+        if len(students) == 0:
+            print(f"\n【{level}】无")
+            continue
+
+        print(f"\n【{level}】({len(students)}人)")
+        print(f"{'学号':<10}{'姓名':<8}{'语文':<6}{'数学':<6}{'英语':<6}{'总分':<6}{'平均分':<8}")
+        for s in sorted(students, key=lambda x: x["average"], reverse=True):
+            print(f"{s['id']:<10}{s['name']:<8}"
+                  f"{s['chinese']:<6}{s['math']:<6}{s['english']:<6}"
+                  f"{s['total']:<6}{s['average']:<8.3f}")
+
+    return 0
+
+
 if __name__ == "__main__":
     print("""\
 ******************************************************
@@ -220,6 +353,8 @@ if __name__ == "__main__":
 5. 显示所有学生
 6. 成绩统计
 7. 成绩排序
+8. 批量导入（CSV）
+9. 等级评定报告
 0. 退出系统
 请输入功能对应的数字: \
 """).strip()
@@ -238,6 +373,10 @@ if __name__ == "__main__":
                 score_statistics()
             case "7":
                 sort_students()
+            case "8":
+                batch_import()
+            case "9":
+                grade_level_report()
             case "0":
                 print("退出成功！")
                 break
