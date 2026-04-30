@@ -1,4 +1,5 @@
 import json
+import math
 import os
 
 if not os.path.exists("database.json"):
@@ -102,7 +103,28 @@ def query_student(purpose = "print"):
 
 def list_all_students():
     """显示所有学生列表"""
-    pass
+    if len(student_database) == 0:
+        print("暂无学生信息！")
+        return 1
+    current_page = 1
+    total_page = math.ceil(len(student_database) / 10)
+    while True:
+        print("学号\t姓名\t语文\t数学\t英语\t总分\t平均分")
+        for student in student_database[current_page * 10 - 9:min(current_page * 10, len(student_database))]:
+            print(f"""{student["id"]}\t{student["name"]}\t{student["chinese"]}\t{student["math"]}\t{student["english"]}\
+    \t{student["total"]}\t{student["average"]}""")
+        print(f"**当前第 {current_page} 页，共 {total_page} 页**")
+        choice = input("按回车键查看下一页，输入数字跳转到指定页码，输入 q 退出查看...").strip()
+        if choice == "q":
+            break
+        elif choice.isdigit():
+            current_page = int(choice)
+        else:
+            current_page += 1
+        if current_page > total_page:
+            print("已到最后一页！")
+            break
+    return 0
 
 def score_statistics():
     """成绩统计分析（平均分、最高分、及格率等）"""
